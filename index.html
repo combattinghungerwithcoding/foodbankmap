@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Food Bank Finder (Leaflet) v2</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- ✅ Cache buster added with ?v=1 -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css?v=1" />
+  <style>
+    html, body { height: 100%; margin: 0; }
+    #map { height: 100vh; }
+    .popup { font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <!-- ✅ Cache buster added with ?v=1 -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js?v=1"></script>
+  <script>
+    // Initialize map centered on Eldersburg
+    const map = L.map('map').setView([39.403, -76.950], 12);
+
+    // Add OpenStreetMap tiles (cache bust with ?v=1)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png?v=1', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Fetch food banks from Flask API (cache bust with ?v=1)
+    async function loadFoodBanks() {
+      try {
+        const resp = await fetch('/api/foodbanks?v=1');
+        const data = await resp.json();
+        (data.items || []).forEach(place => addMarker(place));
+      } catch (err) {
+        console.error("Error loading food banks:", err);
+      }
+    }
+
+    function addMarker(place) {
+      const marker = L.marker([place.lat, place.lng]).addTo(map);
+      const popupHtml = `
+        <div class="popup">
+          <strong>${place.name}</strong><br/>
+          ${place.address || ""}<br/>
+          ${place.hours ? `<em>${place.hours}</em><br/>` : ""}
+          ${place.phone ? `Phone: ${place.phone}<br/>` : ""}
+          ${place.website ? `<a href="${place.website}" target="_blank">Website</a>` : ""}
+        </div>`;
+      marker.bindPopup(popupHtml);
+    }
+
+    loadFoodBanks();
+  </script>
+</body>
+</html>
